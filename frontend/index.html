@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Ticket</title>
+</head>
+<body>
+  <h1>Support Tickets</h1>
+
+  <!-- Formulir untuk menambahkan tiket -->
+  <form id="ticketForm">
+    <input type="text" name="customer_id" placeholder="Customer ID" required>
+    <input type="text" name="customer_name" placeholder="Customer Name" required>
+    <textarea name="product_list" placeholder="Product List" required></textarea>
+    <textarea name="describe_issue" placeholder="Describe Issue" required></textarea>
+    <textarea name="detail_issue" placeholder="Detail Issue" required></textarea>
+    <input type="text" name="contact" placeholder="Contact" required>
+    <select name="priority" required>
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+    <input type="file" name="attachment">
+    <button type="submit">Create Ticket</button>
+  </form>
+
+  <!-- Tabel untuk menampilkan tiket -->
+  <table id="ticketTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Customer ID</th>
+        <th>Customer Name</th>
+        <th>Product List</th>
+        <th>Describe Issue</th>
+        <th>Priority</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data tiket akan ditampilkan di sini -->
+    </tbody>
+  </table>
+
+  <!-- Panggil file JavaScript eksternal -->
+  <script src="script.js"></script>
+</body>
+</html>
