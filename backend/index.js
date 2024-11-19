@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerDocument = require('../swager.json');
 
 // Import routes
 const userRoutes = require('./routes/users');
@@ -30,19 +31,13 @@ app.use(express.json());
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
-    info: {
-      title: 'Express API',
-      version: '1.0.0',
-      description: 'Dokumentasi API menggunakan Swagger',
-    },
-    servers: [
-      { url: 'http://localhost:3000', description: 'Local server' },
-    ],
+    info: { title: 'Express API', version: '1.0.0' },
+    servers: [{ url: 'http://localhost:3000' }],
   },
-  apis: ['./routes/*.js'], // Pastikan path ini sesuai
+  apis: ['./routes/*.js'],
 };
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Gunakan modul routes
 app.use('/api/users', userRoutes);
