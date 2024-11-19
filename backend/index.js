@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerDocument = require('../swager.json');
+const swaggerDocument = require('../swager.json'); // Path ke file JSON OpenAPI Anda
+
 
 // Import routes
 const userRoutes = require('./routes/users');
@@ -12,18 +13,10 @@ const ticketRoutes = require('./routes/tickets');
 const serviceRoutes = require('./routes/services');
 
 // Koneksi database
-const db = require('./db'); // Pastikan koneksi database berjalan
+const db = require('./db'); // Koneksi database
 
 const app = express();
-
-// Konfigurasi CORS
-app.use(cors({
-  origin: '*', // Ganti '*' dengan domain spesifik untuk produksi
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Middleware
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
@@ -45,9 +38,4 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/services', serviceRoutes);
 
-// Jalankan server
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
-});
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
