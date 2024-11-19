@@ -635,6 +635,80 @@
           }
         }
       }
+    },
+    "/api/services": {
+      "get": {
+        "summary": "Retrieve all services",
+        "description": "Fetch a list of all available services.",
+        "tags": ["Services"],
+        "responses": {
+          "200": {
+            "description": "Services retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Services retrieved successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "service_name": {
+                            "type": "string",
+                            "example": "Compute Engine"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Services retrieved successfully",
+                  "data": [
+                    {
+                      "id": 1,
+                      "service_name": "Compute Engine"
+                    },
+                    {
+                      "id": 2,
+                      "service_name": "Google Kubernetes Engine"
+                    },
+                    {
+                      "id": 3,
+                      "service_name": "Cloud Run"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Database error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
