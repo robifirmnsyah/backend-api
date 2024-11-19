@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost:3000/api/tickets'; // Endpoint API untuk tiket
+const apiUrl = 'http://10.7.90.42:3000/api/tickets'; // Endpoint API untuk tiket
 
     // Fungsi untuk mengambil data tiket dari API dan menampilkannya
     function fetchTickets() {
