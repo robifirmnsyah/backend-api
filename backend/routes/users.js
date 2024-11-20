@@ -72,16 +72,18 @@ router.post('/login', (req, res) => {
 
 // Endpoint untuk register pengguna baru
 router.post('/', async (req, res) => {
-  const { full_name, username, password, company_id } = req.body;
+  const { full_name, username, password, company_id, role } = req.body;
 
+  // Validasi input
   if (!full_name || !username || !password || !company_id) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   const id_user = generateUniqueId('USER');
-  const role = 'Customer';
+  const userRole = role || 'Customer';
 
   try {
+    // Periksa apakah company_id valid
     const companyQuery = 'SELECT company_name, billing_id FROM customers WHERE company_id = ?';
     db.query(companyQuery, [company_id], async (err, results) => {
       if (err) {
@@ -95,15 +97,17 @@ router.post('/', async (req, res) => {
 
       const { company_name, billing_id } = results[0];
 
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Simpan pengguna ke database
       const userQuery = `
         INSERT INTO users (id_user, role, full_name, username, password, company_id, company_name, billing_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
       db.query(
         userQuery,
-        [id_user, role, full_name, username, hashedPassword, company_id, company_name, billing_id],
+        [id_user, userRole, full_name, username, hashedPassword, company_id, company_name, billing_id],
         (err, result) => {
           if (err) {
             console.error('Database error:', err);
