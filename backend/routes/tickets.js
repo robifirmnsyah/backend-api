@@ -20,7 +20,6 @@ const generateTicketId = () => {
   return `TICKET-${timestamp}-${randomString}`;
 };
 
-
 // Endpoint untuk membuat tiket baru
 router.post('/', upload.single('attachment'), (req, res) => {
   console.log('File:', req.file); // Log untuk memastikan file diterima
@@ -32,8 +31,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
     describe_issue,
     detail_issue,
     priority,
-    contact,
-    status
+    contact
   } = req.body;
 
   // Validasi input
@@ -43,14 +41,16 @@ router.post('/', upload.single('attachment'), (req, res) => {
     !describe_issue ||
     !detail_issue ||
     !priority ||
-    !contact ||
-    !status
+    !contact
   ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   const attachment = req.file ? req.file.filename : null;
   const ticketId = generateTicketId(); // Auto-generate ticket_id
+  
+  // Tentukan status default
+  const status = 'Open'; // Status default
 
   // Query untuk mendapatkan company_name berdasarkan company_id
   const companyQuery = 'SELECT company_name FROM customers WHERE company_id = ?';
@@ -185,7 +185,7 @@ router.get('id/:ticket_id', (req, res) => {
 });
 
 // Endpoint untuk menghapus tiket berdasarkan ID
-router.delete('id/:ticket_id', (req, res) => {
+router.delete('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
   const query = 'DELETE FROM tickets WHERE ticket_id = ?';
 
@@ -201,12 +201,14 @@ router.delete('id/:ticket_id', (req, res) => {
 });
 
 // Endpoint untuk mengedit tiket berdasarkan ID
-router.put('id/:ticket_id', (req, res) => {
+router.put('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
   const { product_list, describe_issue, detail_issue, priority, contact } = req.body;
 
   const query = `
     UPDATE tickets SET 
+      company_id = ?,
+      company_name = ?,
       product_list = ?, 
       describe_issue = ?, 
       detail_issue = ?, 
