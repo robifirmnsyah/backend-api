@@ -431,24 +431,15 @@
                     "type": "object",
                     "properties": {
                       "ticket_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "example": "TICKET-1732075969127-TAE0YH"
                       },
-                      "product_list": {
-                        "type": "string"
-                      },
-                      "describe_issue": {
-                        "type": "string"
-                      },
-                      "detail_issue": {
-                        "type": "string"
-                      },
-                      "priority": {
-                        "type": "string"
-                      },
-                      "contact": {
-                        "type": "string"
-                      },
-                      "attachment": {
+                      "product_list": { "type": "string" },
+                      "describe_issue": { "type": "string" },
+                      "detail_issue": { "type": "string" },
+                      "priority": { "type": "string" },
+                      "contact": { "type": "string" },
+                      "attachment": { 
                         "type": "string",
                         "nullable": true
                       }
@@ -470,84 +461,65 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "product_list": {
-                    "type": "string"
-                  },
-                  "describe_issue": {
-                    "type": "string"
-                  },
-                  "detail_issue": {
-                    "type": "string"
-                  },
-                  "priority": {
-                    "type": "string"
-                  },
-                  "contact": {
-                    "type": "string"
-                  }
+                  "product_list": { "type": "string" },
+                  "describe_issue": { "type": "string" },
+                  "detail_issue": { "type": "string" },
+                  "priority": { "type": "string" },
+                  "contact": { "type": "string" }
                 },
                 "required": ["product_list", "describe_issue", "detail_issue", "priority", "contact"]
               }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ticket created successfully"
           },
-          "responses": {
-            "201": {
-              "description": "Ticket created successfully"
-            },
-            "400": {
-              "description": "Missing required fields"
-            },
-            "500": {
-              "description": "Database error"
-            }
+          "400": {
+            "description": "Missing required fields"
+          },
+          "500": {
+            "description": "Database error"
           }
         }
       }
     },
     "/api/tickets/{ticket_id}": {
       "get": {
-        "tags": ["Tickets"],
         "summary": "Get a ticket by ID",
+        "description": "Retrieve a ticket by its unique ticket ID",
         "parameters": [
           {
             "name": "ticket_id",
             "in": "path",
             "required": true,
-            "description": "The ID of the ticket",
+            "description": "The unique ID of the ticket",
             "schema": {
-              "type": "integer"
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Ticket details",
+            "description": "Ticket retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "ticket_id": {
-                      "type": "integer"
-                    },
-                    "product_list": {
-                      "type": "string"
-                    },
-                    "describe_issue": {
-                      "type": "string"
-                    },
-                    "detail_issue": {
-                      "type": "string"
-                    },
-                    "priority": {
-                      "type": "string"
-                    },
-                    "contact": {
-                      "type": "string"
-                    },
-                    "attachment": {
                       "type": "string",
-                      "nullable": true
+                      "example": "TICKET-1732075969127-TAE0YH"
+                    },
+                    "product_list": { "type": "string" },
+                    "describe_issue": { "type": "string" },
+                    "detail_issue": { "type": "string" },
+                    "priority": { "type": "string" },
+                    "contact": { "type": "string" },
+                    "attachment": { 
+                      "type": "string",
+                      "nullable": true 
                     }
                   }
                 }
@@ -555,7 +527,20 @@
             }
           },
           "404": {
-            "description": "Ticket not found"
+            "description": "Ticket not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { 
+                      "type": "string",
+                      "example": "Ticket not found"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -569,7 +554,7 @@
             "required": true,
             "description": "The ID of the ticket to update",
             "schema": {
-              "type": "integer"
+              "type": "string"
             }
           }
         ],
@@ -580,21 +565,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "product_list": {
-                    "type": "string"
-                  },
-                  "describe_issue": {
-                    "type": "string"
-                  },
-                  "detail_issue": {
-                    "type": "string"
-                  },
-                  "priority": {
-                    "type": "string"
-                  },
-                  "contact": {
-                    "type": "string"
-                  }
+                  "product_list": { "type": "string" },
+                  "describe_issue": { "type": "string" },
+                  "detail_issue": { "type": "string" },
+                  "priority": { "type": "string" },
+                  "contact": { "type": "string" }
                 }
               }
             }
@@ -622,7 +597,7 @@
             "required": true,
             "description": "The ID of the ticket to delete",
             "schema": {
-              "type": "integer"
+              "type": "string"
             }
           }
         ],
