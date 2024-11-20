@@ -122,7 +122,7 @@ router.get('/', (req, res) => {
 });
 
 // Endpoint untuk mengambil tiket berdasarkan id_user dan role
-router.get('/:id_user', (req, res) => {
+router.get('/user/:id_user', (req, res) => {
   const { id_user } = req.params;
 
   // Query untuk mendapatkan data pengguna berdasarkan id_user
@@ -170,7 +170,7 @@ router.get('/:id_user', (req, res) => {
 });
 
 // Endpoint untuk mendapatkan tiket berdasarkan ID
-router.get('id/:ticket_id', (req, res) => {
+router.get('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
   const query = 'SELECT * FROM tickets WHERE ticket_id = ?';
   db.query(query, [ticketId], (err, result) => {
@@ -203,12 +203,26 @@ router.delete('/:ticket_id', (req, res) => {
 // Endpoint untuk mengedit tiket berdasarkan ID
 router.put('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
-  const { product_list, describe_issue, detail_issue, priority, contact } = req.body;
+  const { company_id, company_name, product_list, describe_issue, detail_issue, priority, contact } = req.body;
 
+  // Validasi input
+  if (
+    !company_id || 
+    !company_name || 
+    !product_list || 
+    !describe_issue || 
+    !detail_issue || 
+    !priority || 
+    !contact
+  ) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Query untuk mengupdate tiket
   const query = `
     UPDATE tickets SET 
-      company_id = ?,
-      company_name = ?,
+      company_id = ?, 
+      company_name = ?, 
       product_list = ?, 
       describe_issue = ?, 
       detail_issue = ?, 
@@ -217,8 +231,18 @@ router.put('/:ticket_id', (req, res) => {
     WHERE ticket_id = ?
   `;
 
-  db.query(query, [product_list, describe_issue, detail_issue, priority, contact, ticketId], (err, result) => {
+  db.query(query, [
+    company_id, 
+    company_name, 
+    product_list, 
+    describe_issue, 
+    detail_issue, 
+    priority, 
+    contact, 
+    ticketId
+  ], (err, result) => {
     if (err) {
+      console.error('Database error (update query):', err);
       return res.status(500).json({ error: 'Database error' });
     }
     if (result.affectedRows === 0) {
