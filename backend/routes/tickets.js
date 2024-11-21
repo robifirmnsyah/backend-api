@@ -148,7 +148,7 @@ router.get('/user/:id_user', (req, res) => {
     if (role === 'Admin') {
       // Admin dapat melihat semua tiket
       ticketQuery = 'SELECT * FROM tickets';
-    } else if (role === 'Admin Customer' || role === 'Customer') {
+    } else if (role === 'Customer Admin' || role === 'Customer') {
       // Admin Customer dan Customer hanya melihat tiket berdasarkan company_id mereka
       ticketQuery = 'SELECT * FROM tickets WHERE company_id = ?';
       queryParams = [company_id];
