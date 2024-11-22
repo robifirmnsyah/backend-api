@@ -38,3 +38,9 @@ coverage/
 .cache/
 .npm/
 .yarn/
+
+# Ignore sensitive files
+./backend/routes/dev-robifirmansyah-f37670e6df3e.json
+
+# Ignore all JSON key files (optional, if you use multiple keys)
+*.json

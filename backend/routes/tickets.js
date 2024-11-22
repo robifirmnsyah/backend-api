@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Inisialisasi Google Cloud Storage
 const storage = new Storage({
-  keyFilename: path.join(__dirname, './dev-robifirmansyah-22286b9dc39d.json') // Ganti dengan path ke Service Account Key
+  keyFilename: path.join(__dirname, './dev-robifirmansyah-f37670e6df3e.json') // Ganti dengan path ke Service Account Key
 });
 const bucket = storage.bucket('bucket-image-ticket'); // Ganti dengan nama bucket Anda
 
@@ -285,22 +285,6 @@ router.get('/:ticket_id', (req, res) => {
   });
 });
 
-// Endpoint untuk menghapus tiket berdasarkan ID
-router.delete('/:ticket_id', (req, res) => {
-  const ticketId = req.params.ticket_id;
-  const query = 'DELETE FROM tickets WHERE ticket_id = ?';
-
-  db.query(query, [ticketId], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-    res.status(200).json({ message: 'Ticket deleted successfully' });
-  });
-});
-
 // Endpoint untuk mengedit tiket berdasarkan ID
 router.put('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
@@ -353,6 +337,38 @@ router.put('/:ticket_id', (req, res) => {
   });
 });
 
+// Endpoint untuk menghapus tiket beserta komentar terkait berdasarkan ticket_id
+router.delete('/:ticket_id', (req, res) => {
+  const ticketId = req.params.ticket_id;
+
+  // Query untuk menghapus komentar terkait dari tabel ticket_comments
+  const deleteCommentsQuery = 'DELETE FROM ticket_comments WHERE ticket_id = ?';
+
+  db.query(deleteCommentsQuery, [ticketId], (err, result) => {
+    if (err) {
+      console.error('Database error (delete comments):', err);
+      return res.status(500).json({ error: 'Database error while deleting comments' });
+    }
+
+    // Setelah komentar dihapus, hapus tiket dari tabel tickets
+    const deleteTicketQuery = 'DELETE FROM tickets WHERE ticket_id = ?';
+    
+    db.query(deleteTicketQuery, [ticketId], (err, result) => {
+      if (err) {
+        console.error('Database error (delete ticket):', err);
+        return res.status(500).json({ error: 'Database error while deleting ticket' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+
+      res.status(200).json({ message: 'Ticket and related comments deleted successfully' });
+    });
+  });
+});
+
+
 // Endpoint untuk POST komentar
 router.post('/comment/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
@@ -400,30 +416,5 @@ router.get('/comment/:ticket_id', (req, res) => {
     res.status(200).json(results);
   });
 });
-
-router.delete('/:ticket_id', (req, res) => {
-  const ticketId = req.params.ticket_id;
-
-  // Debugging log untuk memastikan ID yang diterima
-  console.log('Received ticket ID:', ticketId);
-
-    // Setelah komentar dihapus, lanjutkan menghapus tiket
-    const deleteTicketQuery = 'DELETE FROM tickets WHERE ticket_id = ?';
-    db.query(deleteTicketQuery, [ticketId], (err, ticketResult) => {
-      if (err) {
-        console.error('Database error (ticket delete):', err.message);
-        return res.status(500).json({ error: `Database error while deleting ticket: ${err.message}` });
-      }
-
-      if (ticketResult.affectedRows === 0) {
-        console.log(`Ticket with ID ${ticketId} not found.`);
-        return res.status(404).json({ message: 'Ticket not found' });
-      }
-
-      // Tiket berhasil dihapus
-      res.status(200).json({ message: 'Ticket and associated comments deleted successfully' });
-    });
-  });
-
 
 module.exports = router;
