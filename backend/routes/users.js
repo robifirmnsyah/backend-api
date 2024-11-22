@@ -123,6 +123,17 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Endpoint untuk mendapatkan semua pengguna
+router.get('/', (req, res) => {
+  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id FROM users';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(200).json(results);
+  });
+});
 
 router.get('/:id_user', (req, res) => {
   const id_user = req.params.id_user; // Ambil id_user dari parameter URL
@@ -183,7 +194,6 @@ router.get('/:id_user', (req, res) => {
     });
   });
 });
-
 
 // Endpoint untuk mendapatkan pengguna berdasarkan ID
 router.get('/:id', (req, res) => {
