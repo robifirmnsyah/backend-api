@@ -1,23 +1,28 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path'); // Import path
-const db = require('../db'); // Koneksi database
-const { sendTicketEmail } = require('./emailService'); // Import fungsi email
+const path = require('path');
+const { Storage } = require('@google-cloud/storage'); // Import Google Cloud Storage
+const db = require('../db');
+const { sendTicketEmail } = require('./emailService');
 const router = express.Router();
 
-// Konfigurasi multer untuk mengunggah file
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
+// Inisialisasi Google Cloud Storage
+const storage = new Storage({
+  keyFilename: path.join(__dirname, './dev-robifirmansyah-22286b9dc39d.json') // Ganti dengan path ke Service Account Key
 });
-const upload = multer({ storage });
+const bucket = storage.bucket('bucket-image-ticket'); // Ganti dengan nama bucket Anda
+
+// Konfigurasi multer untuk menyimpan file langsung ke Cloud Storage
+const multerStorage = multer.memoryStorage(); // Menggunakan memoryStorage untuk upload langsung ke GCS
+const upload = multer({
+  storage: multerStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // Membatasi ukuran file maksimal 10MB
+});
 
 // Fungsi untuk menghasilkan ticket_id
 const generateTicketId = () => {
-  const timestamp = Date.now(); // Waktu Unix dalam milidetik
-  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase(); // 6 karakter acak
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `TICKET-${timestamp}-${randomString}`;
 };
 
@@ -45,7 +50,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const attachment = req.file ? req.file.filename : null;
+  const attachment = req.file ? req.file : null;
   const ticketId = generateTicketId();
   const status = 'Open';
 
@@ -62,69 +67,149 @@ router.post('/', upload.single('attachment'), (req, res) => {
 
     const company_name = companyResult[0].company_name;
 
-    const ticketQuery = `
-      INSERT INTO tickets (
-        ticket_id, 
-        product_list, 
-        describe_issue, 
-        detail_issue, 
-        priority, 
-        contact, 
-        company_id, 
-        company_name, 
-        attachment, 
-        status
-      ) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    db.query(
-      ticketQuery,
-      [
-        ticketId,
-        product_list,
-        describe_issue,
-        detail_issue,
-        priority,
-        contact,
-        company_id,
-        company_name,
-        attachment,
-        status
-      ],
-      async (err, result) => {
-        if (err) {
-          console.error('Database error (ticket query):', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
+    if (attachment) {
+      // Tentukan nama file yang akan disimpan di Google Cloud Storage
+      const blob = bucket.file(Date.now() + path.extname(attachment.originalname));
+      const blobStream = blob.createWriteStream({
+        resumable: false,
+        contentType: attachment.mimetype,
+      });
 
-        // Data tiket untuk email
-        const ticketData = {
-          ticket_id: ticketId,
+      blobStream.on('error', (err) => {
+        console.error('Error uploading file:', err);
+        return res.status(500).json({ error: 'Error uploading file to cloud storage' });
+      });
+
+      blobStream.on('finish', async () => {
+        // Setelah upload berhasil, dapatkan URL publik file
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
+        // Menyimpan data tiket di database
+        const ticketQuery = `
+          INSERT INTO tickets (
+            ticket_id, 
+            product_list, 
+            describe_issue, 
+            detail_issue, 
+            priority, 
+            contact, 
+            company_id, 
+            company_name, 
+            attachment, 
+            status
+          ) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        db.query(
+          ticketQuery,
+          [
+            ticketId,
+            product_list,
+            describe_issue,
+            detail_issue,
+            priority,
+            contact,
+            company_id,
+            company_name,
+            publicUrl,  // Menyimpan URL publik di database
+            status
+          ],
+          async (err, result) => {
+            if (err) {
+              console.error('Database error (ticket query):', err);
+              return res.status(500).json({ error: 'Database error' });
+            }
+
+            // Data tiket untuk email
+            const ticketData = {
+              ticket_id: ticketId,
+              product_list,
+              describe_issue,
+              detail_issue,
+              priority,
+              contact,
+              company_name,
+              status,
+              attachment: publicUrl
+            };
+
+            // Kirim email ke Admin
+            try {
+              await sendTicketEmail(ticketData);
+              console.log('Email notification sent to admin!');
+            } catch (emailError) {
+              console.error('Error sending email notification:', emailError);
+            }
+
+            res.status(201).json({ message: 'Ticket created successfully', ticketId });
+          }
+        );
+      });
+
+      blobStream.end(attachment.buffer); // Mulai mengupload file
+    } else {
+      // Jika tidak ada file, lanjutkan ke penyimpanan data tiket tanpa attachment
+      const ticketQuery = `
+        INSERT INTO tickets (
+          ticket_id, 
+          product_list, 
+          describe_issue, 
+          detail_issue, 
+          priority, 
+          contact, 
+          company_id, 
+          company_name, 
+          attachment, 
+          status
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      db.query(
+        ticketQuery,
+        [
+          ticketId,
           product_list,
           describe_issue,
           detail_issue,
           priority,
           contact,
+          company_id,
           company_name,
+          null, // Tidak ada attachment
           status
-        };
+        ],
+        async (err, result) => {
+          if (err) {
+            console.error('Database error (ticket query):', err);
+            return res.status(500).json({ error: 'Database error' });
+          }
 
-        // Kirim email ke Admin
-        try {
-          await sendTicketEmail(ticketData);
-          console.log('Email notification sent to admin!');
-        } catch (emailError) {
-          console.error('Error sending email notification:', emailError);
+          // Data tiket untuk email
+          const ticketData = {
+            ticket_id: ticketId,
+            product_list,
+            describe_issue,
+            detail_issue,
+            priority,
+            contact,
+            company_name,
+            status
+          };
+
+          // Kirim email ke Admin
+          try {
+            await sendTicketEmail(ticketData);
+            console.log('Email notification sent to admin!');
+          } catch (emailError) {
+            console.error('Error sending email notification:', emailError);
+          }
+
+          res.status(201).json({ message: 'Ticket created successfully', ticketId });
         }
-
-        res
-          .status(201)
-          .json({ message: 'Ticket created successfully', ticketId });
-      }
-    );
+      );
+    }
   });
 });
-
 
 // Endpoint untuk mengambil semua tiket support
 router.get('/', (req, res) => {
@@ -315,5 +400,30 @@ router.get('/comment/:ticket_id', (req, res) => {
     res.status(200).json(results);
   });
 });
+
+router.delete('/:ticket_id', (req, res) => {
+  const ticketId = req.params.ticket_id;
+
+  // Debugging log untuk memastikan ID yang diterima
+  console.log('Received ticket ID:', ticketId);
+
+    // Setelah komentar dihapus, lanjutkan menghapus tiket
+    const deleteTicketQuery = 'DELETE FROM tickets WHERE ticket_id = ?';
+    db.query(deleteTicketQuery, [ticketId], (err, ticketResult) => {
+      if (err) {
+        console.error('Database error (ticket delete):', err.message);
+        return res.status(500).json({ error: `Database error while deleting ticket: ${err.message}` });
+      }
+
+      if (ticketResult.affectedRows === 0) {
+        console.log(`Ticket with ID ${ticketId} not found.`);
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+
+      // Tiket berhasil dihapus
+      res.status(200).json({ message: 'Ticket and associated comments deleted successfully' });
+    });
+  });
+
 
 module.exports = router;

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "dev-robifirmansyah",
+  "private_key_id": "22286b9dc39d0ffd4f7cb4c9133300ef67d9f165",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCgBs9PH7sUtuHJ\n0o6H5R7Gz7vyn7Cpdvptv6SStIuWsg/diGOldk+nQgOiULUx6vvsB2HKyM2Oiyad\nwYtwmfwIkBpJxgoT3XcudoBqjRejLdPn8Nj8dZ9mBlavpZsW6X0Odrj36TE1609g\nQr3CIb+RXvHOHMCoBJ6BYwU5qrJ2N5D4vC2W7ybUc2/PlM8+EzJeIe0dEx7fEmZg\neE+tynyfAHgJmEHBrurM8TBQNOyFMtAMiLk/SRcITgbNSVsYzP2Mc/yGhSFPiSNA\nqT45gefwKzLKHsnbHdTBFniG7oieseV67CBmzyKFXII3mG8I0EHKK8+g5nhtDNy9\nGzBx2lwRAgMBAAECggEABvW23FjLodtwm17NycOldJV+Nc+bzwoEeyOWrnX9XHHs\n+lhDR7PrI9HNX0jJ8aRn/aBmUJvOQ17iUIIFfNGopk1wpEDhiTLEi0P2grPVWWit\nxsCZClVaB/WafXALHEpuQMPZeHhHFnKQEKZkcwIVXybhRsLlvuT5CRTvui3mLjmb\nsL9q5H6DEfIr7B2B28Qy/U1WLjF9gjLxgay4PT9qNP/t+eczXZSvM6asjLBmn2hs\nbhmUyuiETwPcl3IZwP/FN8qEuUwHnRymn+Qyy7IFajqOPn7v59gDyYz/wAG60xPZ\nA9LkeWx+iVwlZseRGgu5OrKqIlo8KOhy9efXVDrIoQKBgQDWseVx9EcqD+JXYErv\nYStMzbEsSODmnWzQXb7/jSvrNQ4bSPKt8HhNfD+UI4lFGSfxio4qBgl1SL9OHvvF\nZCcaixqJ/iDvPGrNj6K5bdAKIG44AwJg+/a1T3k7AKNIQdz91BLmRqxGH45ct8zz\n99yHEiTiTmIkofOUUo0rcH3yYQKBgQC+0GcdRZsCTQNOgtdANDNYn1N1V7EpCz2B\nhbQ09438A8adDWwn89rZWUKCEUrvUa181nWuwVFwyQA1pbPwVLq0Sl1Hr26x8mb0\n7d+9w7wM7jdSJtIBy5jiQ0ttAJtHvqcI8kXtNco6hQ473qc7+9VO2OLl+ntvPzmb\nA4+Ky3knsQKBgDGxUVsz4DjjHk99ETsg8YXAYk7Ou4eFTodX+3po8Y5qZE56bvlF\nnILKzGh8ZSxiKzWkDU26wfusj+MEFuBUUxy4r7ba5EKbaFkV8uMagLmnUfuS7r0F\n9M94iqXWevShkgYKTSmRmBRO/4OEY2LgruFwmKrs25iBB8D/7n7sdaphAoGBALgj\nTR7GaQwTXbmKMkbXGSXQuy1l7qT5H+W6LWlf7DjjO+ubZGA5x1wv8yqpnXLNk2oB\nW5fFHt6EWhtrSPYIDhSmHtZqyZwXnJuIYn4yQWsJB4HTzJ3G6EaRQlxyVWcq6O6N\nPkXnvrwyYsYL277bC8IHMw9UZYG5tdGN4hvCt6xBAoGAASssBDplAy7ictpC9Uic\nu0W99ImO3j+8hxmMmMQ5Nk9JBiAgHJLvcIeMYi+e7UEUG9ftUJOXIHZLGuJakOAv\nxylGm62WVVXzW2elVwqOPT+c0oBYG2gSouACRXdN96ZK9purxvkCcbZFdy4wJ5dH\nTqozbvAxCsFekFLvBOQwvIY=\n-----END PRIVATE KEY-----\n",
+  "client_email": "sa-bucket-image@dev-robifirmansyah.iam.gserviceaccount.com",
+  "client_id": "108128382820454677878",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sa-bucket-image%40dev-robifirmansyah.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
