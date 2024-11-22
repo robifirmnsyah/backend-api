@@ -123,17 +123,67 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Endpoint untuk mendapatkan semua pengguna
-router.get('/', (req, res) => {
-  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id FROM users';
-  db.query(query, (err, results) => {
+
+router.get('/:id_user', (req, res) => {
+  const id_user = req.params.id_user; // Ambil id_user dari parameter URL
+
+  if (!id_user) {
+    return res.status(400).json({ error: 'Missing required parameter: id_user' });
+  }
+
+  // Query untuk mendapatkan role dan company_id pengguna
+  const userQuery = `
+    SELECT role, company_id 
+    FROM users 
+    WHERE id_user = ?
+  `;
+
+  db.query(userQuery, [id_user], (err, userResult) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error('Database error (user query):', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.status(200).json(results);
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { role, company_id } = userResult[0];
+
+    // Query untuk mendapatkan data user sesuai role
+    let query;
+    let queryParams = [];
+
+    if (role === 'Admin') {
+      // Jika role Admin, ambil seluruh data user
+      query = `
+        SELECT id_user, role, full_name, username, company_id, company_name, billing_id 
+        FROM users
+      `;
+    } else if (role === 'Customer Admin') {
+      // Jika role Customer Admin, ambil data user sesuai company_id mereka
+      query = `
+        SELECT id_user, role, full_name, username, company_id, company_name, billing_id 
+        FROM users
+        WHERE company_id = ?
+      `;
+      queryParams = [company_id];
+    } else {
+      // Jika role lain, tidak memiliki akses
+      return res.status(403).json({ error: 'You do not have access to view user data' });
+    }
+
+    // Eksekusi query untuk mendapatkan data user
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Database error (users query):', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(200).json(results);
+    });
   });
 });
+
 
 // Endpoint untuk mendapatkan pengguna berdasarkan ID
 router.get('/:id', (req, res) => {
