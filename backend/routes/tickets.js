@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path'); // Import path
 const db = require('../db'); // Koneksi database
+const { sendTicketEmail } = require('./emailService'); // Import fungsi email
 const router = express.Router();
 
 // Konfigurasi multer untuk mengunggah file
@@ -20,13 +21,12 @@ const generateTicketId = () => {
   return `TICKET-${timestamp}-${randomString}`;
 };
 
-// Endpoint untuk membuat tiket baru
 router.post('/', upload.single('attachment'), (req, res) => {
-  console.log('File:', req.file); // Log untuk memastikan file diterima
-  console.log('Request Body:', req.body); // Log untuk melihat data yang diterima
+  console.log('File:', req.file);
+  console.log('Request Body:', req.body);
 
   const {
-    company_id, // pastikan ini ada
+    company_id,
     product_list,
     describe_issue,
     detail_issue,
@@ -34,7 +34,6 @@ router.post('/', upload.single('attachment'), (req, res) => {
     contact
   } = req.body;
 
-  // Validasi input
   if (
     !company_id ||
     !product_list ||
@@ -47,12 +46,9 @@ router.post('/', upload.single('attachment'), (req, res) => {
   }
 
   const attachment = req.file ? req.file.filename : null;
-  const ticketId = generateTicketId(); // Auto-generate ticket_id
-  
-  // Tentukan status default
-  const status = 'Open'; // Status default
+  const ticketId = generateTicketId();
+  const status = 'Open';
 
-  // Query untuk mendapatkan company_name berdasarkan company_id
   const companyQuery = 'SELECT company_name FROM customers WHERE company_id = ?';
   db.query(companyQuery, [company_id], (err, companyResult) => {
     if (err) {
@@ -66,7 +62,6 @@ router.post('/', upload.single('attachment'), (req, res) => {
 
     const company_name = companyResult[0].company_name;
 
-    // Query untuk menyimpan tiket baru
     const ticketQuery = `
       INSERT INTO tickets (
         ticket_id, 
@@ -96,10 +91,30 @@ router.post('/', upload.single('attachment'), (req, res) => {
         attachment,
         status
       ],
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           console.error('Database error (ticket query):', err);
           return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Data tiket untuk email
+        const ticketData = {
+          ticket_id: ticketId,
+          product_list,
+          describe_issue,
+          detail_issue,
+          priority,
+          contact,
+          company_name,
+          status
+        };
+
+        // Kirim email ke Admin
+        try {
+          await sendTicketEmail(ticketData);
+          console.log('Email notification sent to admin!');
+        } catch (emailError) {
+          console.error('Error sending email notification:', emailError);
         }
 
         res
@@ -109,6 +124,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
     );
   });
 });
+
 
 // Endpoint untuk mengambil semua tiket support
 router.get('/', (req, res) => {
