@@ -268,4 +268,52 @@ router.put('/:ticket_id', (req, res) => {
   });
 });
 
+// Endpoint untuk POST komentar
+router.post('/comment/:ticket_id', (req, res) => {
+  const ticketId = req.params.ticket_id;
+  const { id_user, comment } = req.body;
+
+  // Validasi input
+  if (!id_user || !comment) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const query = `
+    INSERT INTO ticket_comments (ticket_id, id_user, comment)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(query, [ticketId, id_user, comment], (err, result) => {
+    if (err) {
+      console.error('Database error (comment insert):', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ message: 'Comment added successfully' });
+  });
+});
+
+router.get('/comment/:ticket_id', (req, res) => {
+  const ticketId = req.params.ticket_id;
+
+  const query = `
+    SELECT tc.ticket_id, tc.comment, u.full_name, tc.timestamp
+    FROM ticket_comments tc
+    JOIN users u ON tc.id_user = u.id_user
+    WHERE tc.ticket_id = ?
+  `;
+
+  db.query(query, [ticketId], (err, results) => {
+    if (err) {
+      console.error('Database error (comment query):', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No comments found' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
 module.exports = router;
