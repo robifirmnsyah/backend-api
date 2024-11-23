@@ -61,14 +61,20 @@ router.get('/:company_id', (req, res) => {
 // Endpoint untuk memperbarui customer berdasarkan company_id
 router.put('/:company_id', (req, res) => {
   const { company_id } = req.params;
-  const { company_name, billing_id } = req.body;
+  const { company_name, billing_id, maintenance, limit_ticket } = req.body;
 
-  if (!company_name || !billing_id) {
-    return res.status(400).json({ error: 'Company name and billing ID are required' });
+  // Validasi input agar semua kolom wajib diisi
+  if (!company_name || !billing_id || !maintenance || limit_ticket === undefined) {
+    return res.status(400).json({ error: 'Company name, billing ID, maintenance, and limit_ticket are required' });
   }
 
-  const query = 'UPDATE customers SET company_name = ?, billing_id = ? WHERE company_id = ?';
-  db.query(query, [company_name, billing_id, company_id], (err, result) => {
+  const query = `
+    UPDATE customers 
+    SET company_name = ?, billing_id = ?, maintenance = ?, limit_ticket = ? 
+    WHERE company_id = ?
+  `;
+
+  db.query(query, [company_name, billing_id, maintenance, limit_ticket, company_id], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });

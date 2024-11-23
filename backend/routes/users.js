@@ -56,6 +56,8 @@ router.post('/login', (req, res) => {
         company_id: user.company_id,
         company_name: user.company_name,
         billing_id: user.billing_id,
+        email: user.email,
+        phone: user.phone,
       };
 
       res.status(200).json({

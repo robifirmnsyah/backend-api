@@ -26,6 +26,7 @@ const generateTicketId = () => {
   return `TICKET-${timestamp}-${randomString}`;
 };
 
+// Endpoint untuk membuat tiket baru
 router.post('/', upload.single('attachment'), (req, res) => {
   console.log('File:', req.file);
   console.log('Request Body:', req.body);
@@ -52,12 +53,13 @@ router.post('/', upload.single('attachment'), (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const attachment = req.file ? req.file : null;
-  const ticketId = generateTicketId();
-  const status = 'Open';
-
-  // Query untuk mendapatkan nama perusahaan
-  const companyQuery = 'SELECT company_name FROM customers WHERE company_id = ?';
+  // Query untuk mendapatkan informasi perusahaan termasuk limit tiket
+  const companyQuery = `
+    SELECT company_name, limit_ticket 
+    FROM customers 
+    WHERE company_id = ?
+  `;
+  
   db.query(companyQuery, [company_id], (err, companyResult) => {
     if (err) {
       console.error('Database error (company query):', err);
@@ -68,42 +70,65 @@ router.post('/', upload.single('attachment'), (req, res) => {
       return res.status(404).json({ error: 'Company not found' });
     }
 
-    const company_name = companyResult[0].company_name;
+    const { company_name, limit_ticket } = companyResult[0];
 
-    if (attachment) {
-      // Tentukan nama file yang akan disimpan di Google Cloud Storage
-      const blob = bucket.file(Date.now() + path.extname(attachment.originalname));
-      const blobStream = blob.createWriteStream({
-        resumable: false,
-        contentType: attachment.mimetype,
-      });
+    // Query untuk menghitung jumlah tiket aktif dari perusahaan ini
+    const ticketCountQuery = `
+      SELECT COUNT(*) AS ticket_count 
+      FROM tickets 
+      WHERE company_id = ?
+    `;
+    
+    db.query(ticketCountQuery, [company_id], (err, ticketResult) => {
+      if (err) {
+        console.error('Database error (ticket count query):', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
 
-      blobStream.on('error', (err) => {
-        console.error('Error uploading file:', err);
-        return res.status(500).json({ error: 'Error uploading file to cloud storage' });
-      });
+      const ticketCount = ticketResult[0].ticket_count;
 
-      blobStream.on('finish', async () => {
-        // Setelah upload berhasil, dapatkan URL publik file
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+      // Validasi: Cek apakah jumlah tiket melebihi limit
+      if (ticketCount >= limit_ticket) {
+        return res.status(403).json({ error: 'Ticket limit reached for this company' });
+      }
 
-        // Menyimpan data tiket di database
+      // Proses selanjutnya sama seperti kode sebelumnya (upload dan simpan tiket)
+      const attachment = req.file ? req.file : null;
+      const ticketId = generateTicketId();
+      const status = 'Open';
+
+      if (attachment) {
+        // Proses upload file ke Google Cloud Storage
+        const blob = bucket.file(Date.now() + path.extname(attachment.originalname));
+        const blobStream = blob.createWriteStream({
+          resumable: false,
+          contentType: attachment.mimetype,
+        });
+
+        blobStream.on('error', (err) => {
+          console.error('Error uploading file:', err);
+          return res.status(500).json({ error: 'Error uploading file to cloud storage' });
+        });
+
+        blobStream.on('finish', async () => {
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+          saveTicketToDB(publicUrl); // Fungsi untuk menyimpan tiket di database
+        });
+
+        blobStream.end(attachment.buffer); // Mulai mengupload file
+      } else {
+        saveTicketToDB(null); // Simpan tiket tanpa attachment
+      }
+
+      function saveTicketToDB(attachmentUrl) {
         const ticketQuery = `
           INSERT INTO tickets (
-            ticket_id, 
-            product_list, 
-            describe_issue, 
-            detail_issue, 
-            priority, 
-            contact, 
-            company_id, 
-            company_name, 
-            attachment, 
-            id_user,
-            status
+            ticket_id, product_list, describe_issue, detail_issue, priority, 
+            contact, company_id, company_name, attachment, id_user, status
           ) 
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
         db.query(
           ticketQuery,
           [
@@ -115,8 +140,8 @@ router.post('/', upload.single('attachment'), (req, res) => {
             contact,
             company_id,
             company_name,
-            publicUrl,  // Menyimpan URL publik di database
-            id_user,    // Menyimpan id_user
+            attachmentUrl,
+            id_user,
             status
           ],
           async (err, result) => {
@@ -138,7 +163,6 @@ router.post('/', upload.single('attachment'), (req, res) => {
             };
 
             try {
-              // Kirim email ke user yang terkait dengan id_user
               await sendTicketEmail(ticketData, id_user);
               console.log('Email notification sent to user!');
             } catch (emailError) {
@@ -148,74 +172,11 @@ router.post('/', upload.single('attachment'), (req, res) => {
             res.status(201).json({ message: 'Ticket created successfully', ticketId });
           }
         );
-      });
-
-      blobStream.end(attachment.buffer); // Mulai mengupload file
-    } else {
-      // Jika tidak ada file, lanjutkan ke penyimpanan data tiket tanpa attachment
-      const ticketQuery = `
-        INSERT INTO tickets (
-          ticket_id, 
-          product_list, 
-          describe_issue, 
-          detail_issue, 
-          priority, 
-          contact, 
-          company_id, 
-          company_name, 
-          attachment, 
-          id_user,
-          status
-        ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      db.query(
-        ticketQuery,
-        [
-          ticketId,
-          product_list,
-          describe_issue,
-          detail_issue,
-          priority,
-          contact,
-          company_id,
-          company_name,
-          null, // Tidak ada attachment
-          id_user, 
-          status
-        ],
-        async (err, result) => {
-          if (err) {
-            console.error('Database error (ticket query):', err);
-            return res.status(500).json({ error: 'Database error' });
-          }
-
-          // Kirim email setelah tiket berhasil dibuat
-          const ticketData = {
-            ticket_id: ticketId,
-            product_list,
-            describe_issue,
-            detail_issue,
-            priority,
-            contact,
-            company_name,
-            status
-          };
-
-          try {
-            // Kirim email ke user yang terkait dengan id_user
-            await sendTicketEmail(ticketData, id_user);
-            console.log('Email notification sent to user!');
-          } catch (emailError) {
-            console.error('Error sending email notification:', emailError);
-          }
-
-          res.status(201).json({ message: 'Ticket created successfully', ticketId });
-        }
-      );
-    }
+      }
+    });
   });
 });
+
 
 // Endpoint untuk mengambil semua tiket support
 router.get('/', (req, res) => {
