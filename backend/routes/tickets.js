@@ -39,6 +39,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
     contact
   } = req.body;
 
+  // Validasi input
   if (
     !company_id ||
     !product_list ||
@@ -52,8 +53,8 @@ router.post('/', upload.single('attachment'), (req, res) => {
 
   const attachment = req.file ? req.file : null;
   const ticketId = generateTicketId();
-  const status = 'Open';
 
+  // Query untuk mendapatkan nama perusahaan
   const companyQuery = 'SELECT company_name FROM customers WHERE company_id = ?';
   db.query(companyQuery, [company_id], (err, companyResult) => {
     if (err) {
@@ -95,10 +96,9 @@ router.post('/', upload.single('attachment'), (req, res) => {
             contact, 
             company_id, 
             company_name, 
-            attachment, 
-            status
+            attachment
           ) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         db.query(
           ticketQuery,
@@ -111,8 +111,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
             contact,
             company_id,
             company_name,
-            publicUrl,  // Menyimpan URL publik di database
-            status
+            publicUrl // Menyimpan URL publik di database
           ],
           async (err, result) => {
             if (err) {
@@ -129,7 +128,6 @@ router.post('/', upload.single('attachment'), (req, res) => {
               priority,
               contact,
               company_name,
-              status,
               attachment: publicUrl
             };
 
@@ -159,10 +157,9 @@ router.post('/', upload.single('attachment'), (req, res) => {
           contact, 
           company_id, 
           company_name, 
-          attachment, 
-          status
+          attachment
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       db.query(
         ticketQuery,
@@ -175,8 +172,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
           contact,
           company_id,
           company_name,
-          null, // Tidak ada attachment
-          status
+          null // Tidak ada attachment
         ],
         async (err, result) => {
           if (err) {
@@ -192,8 +188,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
             detail_issue,
             priority,
             contact,
-            company_name,
-            status
+            company_name
           };
 
           // Kirim email ke Admin
@@ -288,7 +283,16 @@ router.get('/:ticket_id', (req, res) => {
 // Endpoint untuk mengedit tiket berdasarkan ID
 router.put('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
-  const { company_id, company_name, product_list, describe_issue, detail_issue, priority, contact } = req.body;
+  const { 
+    company_id, 
+    company_name, 
+    product_list, 
+    describe_issue, 
+    detail_issue, 
+    priority, 
+    contact, 
+    status // Tambahkan status di sini
+  } = req.body;
 
   // Validasi input
   if (
@@ -298,7 +302,8 @@ router.put('/:ticket_id', (req, res) => {
     !describe_issue || 
     !detail_issue || 
     !priority || 
-    !contact
+    !contact || 
+    !status // Tambahkan validasi untuk status
   ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -312,7 +317,8 @@ router.put('/:ticket_id', (req, res) => {
       describe_issue = ?, 
       detail_issue = ?, 
       priority = ?, 
-      contact = ?
+      contact = ?, 
+      status = ? -- Tambahkan status di sini
     WHERE ticket_id = ?
   `;
 
@@ -324,6 +330,7 @@ router.put('/:ticket_id', (req, res) => {
     detail_issue, 
     priority, 
     contact, 
+    status, // Tambahkan status ke parameter query
     ticketId
   ], (err, result) => {
     if (err) {
@@ -336,6 +343,7 @@ router.put('/:ticket_id', (req, res) => {
     res.status(200).json({ message: 'Ticket updated successfully' });
   });
 });
+
 
 // Endpoint untuk menghapus tiket beserta komentar terkait berdasarkan ticket_id
 router.delete('/:ticket_id', (req, res) => {

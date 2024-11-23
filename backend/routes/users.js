@@ -257,61 +257,32 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', (req, res) => {
   const id_user = req.params.id;
 
-  // Langkah 1: Cari tiket yang terkait dengan id_user
-  const getTicketsQuery = `
-    SELECT ticket_id 
-    FROM tickets 
-    WHERE company_id = (SELECT company_id FROM users WHERE id_user = ?)
+  // Hapus komentar terkait user
+  const deleteCommentsQuery = `
+    DELETE FROM ticket_comments 
+    WHERE id_user = ?
   `;
 
-  db.query(getTicketsQuery, [id_user], (err, tickets) => {
+  db.query(deleteCommentsQuery, [id_user], (err) => {
     if (err) {
-      console.error('Database error (get tickets):', err);
+      console.error('Database error (delete comments):', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
-    const ticketIds = tickets.map((ticket) => ticket.ticket_id);
+    // Hapus user setelah komentar terkait dihapus
+    const deleteUserQuery = 'DELETE FROM users WHERE id_user = ?';
 
-    // Langkah 2: Hapus komentar yang terkait dengan tiket dan id_user
-    const deleteCommentsQuery = `
-      DELETE FROM ticket_comments 
-      WHERE id_user = ? OR ticket_id IN (?)
-    `;
-
-    db.query(deleteCommentsQuery, [id_user, ticketIds], (err) => {
+    db.query(deleteUserQuery, [id_user], (err, result) => {
       if (err) {
-        console.error('Database error (delete comments):', err);
+        console.error('Database error (delete user):', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      // Langkah 3: Hapus tiket yang terkait dengan company_id user
-      const deleteTicketsQuery = `
-        DELETE FROM tickets 
-        WHERE company_id = (SELECT company_id FROM users WHERE id_user = ?)
-      `;
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
 
-      db.query(deleteTicketsQuery, [id_user], (err) => {
-        if (err) {
-          console.error('Database error (delete tickets):', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-
-        // Langkah 4: Hapus pengguna
-        const deleteUserQuery = 'DELETE FROM users WHERE id_user = ?';
-
-        db.query(deleteUserQuery, [id_user], (err, result) => {
-          if (err) {
-            console.error('Database error (delete user):', err);
-            return res.status(500).json({ error: 'Database error' });
-          }
-
-          if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found' });
-          }
-
-          res.status(200).json({ message: 'User and related data deleted successfully' });
-        });
-      });
+      res.status(200).json({ message: 'User and related comments deleted successfully' });
     });
   });
 });
