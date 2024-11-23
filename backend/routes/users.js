@@ -72,10 +72,10 @@ router.post('/login', (req, res) => {
 
 // Endpoint untuk register pengguna baru
 router.post('/', async (req, res) => {
-  const { full_name, username, password, company_id, role } = req.body;
+  const { full_name, username, password, company_id, role, email, phone } = req.body;
 
   // Validasi input
-  if (!full_name || !username || !password || !company_id) {
+  if (!full_name || !username || !password || !company_id || !email || !phone) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -100,14 +100,14 @@ router.post('/', async (req, res) => {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Simpan pengguna ke database
+      // Simpan pengguna ke database dengan email dan phone
       const userQuery = `
-        INSERT INTO users (id_user, role, full_name, username, password, company_id, company_name, billing_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (id_user, role, full_name, username, password, company_id, company_name, billing_id, email, phone) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       db.query(
         userQuery,
-        [id_user, userRole, full_name, username, hashedPassword, company_id, company_name, billing_id],
+        [id_user, userRole, full_name, username, hashedPassword, company_id, company_name, billing_id, email, phone],
         (err, result) => {
           if (err) {
             console.error('Database error:', err);
@@ -125,7 +125,7 @@ router.post('/', async (req, res) => {
 
 // Endpoint untuk mendapatkan semua pengguna
 router.get('/', (req, res) => {
-  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id FROM users';
+  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone FROM users';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Database error:', err);
@@ -134,6 +134,7 @@ router.get('/', (req, res) => {
     res.status(200).json(results);
   });
 });
+
 
 router.get('/:id_user', (req, res) => {
   const id_user = req.params.id_user; // Ambil id_user dari parameter URL
@@ -168,13 +169,13 @@ router.get('/:id_user', (req, res) => {
     if (role === 'Admin') {
       // Jika role Admin, ambil seluruh data user
       query = `
-        SELECT id_user, role, full_name, username, company_id, company_name, billing_id 
+        SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone 
         FROM users
       `;
     } else if (role === 'Customer Admin') {
       // Jika role Customer Admin, ambil data user sesuai company_id mereka
       query = `
-        SELECT id_user, role, full_name, username, company_id, company_name, billing_id 
+        SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone 
         FROM users
         WHERE company_id = ?
       `;
@@ -198,7 +199,7 @@ router.get('/:id_user', (req, res) => {
 // Endpoint untuk mendapatkan pengguna berdasarkan ID
 router.get('/:id', (req, res) => {
   const id_user = req.params.id;
-  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id FROM users WHERE id_user = ?';
+  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone FROM users WHERE id_user = ?';
   db.query(query, [id_user], (err, result) => {
     if (err) {
       console.error('Database error:', err);
@@ -214,7 +215,7 @@ router.get('/:id', (req, res) => {
 // Endpoint untuk mengupdate pengguna
 router.put('/:id', async (req, res) => {
   const id_user = req.params.id;
-  const { full_name, username, password, company_id, company_name, billing_id, role } = req.body;
+  const { full_name, username, password, company_id, company_name, billing_id, role, email, phone } = req.body;
 
   try {
     let hashedPassword = null;
@@ -230,12 +231,14 @@ router.put('/:id', async (req, res) => {
         company_id = ?, 
         company_name = ?, 
         billing_id = ?, 
-        role = ? 
+        role = ?, 
+        email = ?, 
+        phone = ?
       WHERE id_user = ?
     `;
     const params = password
-      ? [full_name, username, hashedPassword, company_id, company_name, billing_id, role, id_user]
-      : [full_name, username, company_id, company_name, billing_id, role, id_user];
+      ? [full_name, username, hashedPassword, company_id, company_name, billing_id, role, email, phone, id_user]
+      : [full_name, username, company_id, company_name, billing_id, role, email, phone, id_user];
 
     db.query(query, params, (err, result) => {
       if (err) {
@@ -252,6 +255,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Error processing request' });
   }
 });
+
 
 // Endpoint untuk menghapus pengguna
 router.delete('/:id', (req, res) => {

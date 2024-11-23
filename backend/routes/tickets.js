@@ -36,23 +36,25 @@ router.post('/', upload.single('attachment'), (req, res) => {
     describe_issue,
     detail_issue,
     priority,
-    contact
+    contact,
+    id_user  
   } = req.body;
 
-  // Validasi input
   if (
     !company_id ||
     !product_list ||
     !describe_issue ||
     !detail_issue ||
     !priority ||
-    !contact
+    !contact ||
+    !id_user 
   ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   const attachment = req.file ? req.file : null;
   const ticketId = generateTicketId();
+  const status = 'Open';
 
   // Query untuk mendapatkan nama perusahaan
   const companyQuery = 'SELECT company_name FROM customers WHERE company_id = ?';
@@ -96,9 +98,11 @@ router.post('/', upload.single('attachment'), (req, res) => {
             contact, 
             company_id, 
             company_name, 
-            attachment
+            attachment, 
+            id_user,
+            status
           ) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         db.query(
           ticketQuery,
@@ -111,7 +115,9 @@ router.post('/', upload.single('attachment'), (req, res) => {
             contact,
             company_id,
             company_name,
-            publicUrl // Menyimpan URL publik di database
+            publicUrl,  // Menyimpan URL publik di database
+            id_user,    // Menyimpan id_user
+            status
           ],
           async (err, result) => {
             if (err) {
@@ -119,7 +125,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
               return res.status(500).json({ error: 'Database error' });
             }
 
-            // Data tiket untuk email
+            // Kirim email setelah tiket berhasil dibuat
             const ticketData = {
               ticket_id: ticketId,
               product_list,
@@ -128,13 +134,13 @@ router.post('/', upload.single('attachment'), (req, res) => {
               priority,
               contact,
               company_name,
-              attachment: publicUrl
+              status
             };
 
-            // Kirim email ke Admin
             try {
-              await sendTicketEmail(ticketData);
-              console.log('Email notification sent to admin!');
+              // Kirim email ke user yang terkait dengan id_user
+              await sendTicketEmail(ticketData, id_user);
+              console.log('Email notification sent to user!');
             } catch (emailError) {
               console.error('Error sending email notification:', emailError);
             }
@@ -157,9 +163,11 @@ router.post('/', upload.single('attachment'), (req, res) => {
           contact, 
           company_id, 
           company_name, 
-          attachment
+          attachment, 
+          id_user,
+          status
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       db.query(
         ticketQuery,
@@ -172,7 +180,9 @@ router.post('/', upload.single('attachment'), (req, res) => {
           contact,
           company_id,
           company_name,
-          null // Tidak ada attachment
+          null, // Tidak ada attachment
+          id_user, 
+          status
         ],
         async (err, result) => {
           if (err) {
@@ -180,7 +190,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
             return res.status(500).json({ error: 'Database error' });
           }
 
-          // Data tiket untuk email
+          // Kirim email setelah tiket berhasil dibuat
           const ticketData = {
             ticket_id: ticketId,
             product_list,
@@ -188,13 +198,14 @@ router.post('/', upload.single('attachment'), (req, res) => {
             detail_issue,
             priority,
             contact,
-            company_name
+            company_name,
+            status
           };
 
-          // Kirim email ke Admin
           try {
-            await sendTicketEmail(ticketData);
-            console.log('Email notification sent to admin!');
+            // Kirim email ke user yang terkait dengan id_user
+            await sendTicketEmail(ticketData, id_user);
+            console.log('Email notification sent to user!');
           } catch (emailError) {
             console.error('Error sending email notification:', emailError);
           }
