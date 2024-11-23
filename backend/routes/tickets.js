@@ -128,7 +128,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
           ) 
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-
+      
         db.query(
           ticketQuery,
           [
@@ -144,35 +144,50 @@ router.post('/', upload.single('attachment'), (req, res) => {
             id_user,
             status
           ],
-          async (err, result) => {
+          (err, result) => {
             if (err) {
               console.error('Database error (ticket query):', err);
               return res.status(500).json({ error: 'Database error' });
             }
-
-            // Kirim email setelah tiket berhasil dibuat
-            const ticketData = {
-              ticket_id: ticketId,
-              product_list,
-              describe_issue,
-              detail_issue,
-              priority,
-              contact,
-              company_name,
-              status
-            };
-
-            try {
-              await sendTicketEmail(ticketData, id_user);
-              console.log('Email notification sent to user!');
-            } catch (emailError) {
-              console.error('Error sending email notification:', emailError);
-            }
-
-            res.status(201).json({ message: 'Ticket created successfully', ticketId });
+      
+            // Update ticket_usage di tabel customers
+            const updateUsageQuery = `
+              UPDATE customers 
+              SET ticket_usage = ticket_usage + 1 
+              WHERE company_id = ?
+            `;
+            
+            db.query(updateUsageQuery, [company_id], (err, updateResult) => {
+              if (err) {
+                console.error('Database error (update usage query):', err);
+                return res.status(500).json({ error: 'Error updating ticket usage' });
+              }
+      
+              // Kirim email setelah tiket berhasil dibuat
+              const ticketData = {
+                ticket_id: ticketId,
+                product_list,
+                describe_issue,
+                detail_issue,
+                priority,
+                contact,
+                company_name,
+                status
+              };
+      
+              sendTicketEmail(ticketData, id_user)
+                .then(() => {
+                  console.log('Email notification sent to user!');
+                  res.status(201).json({ message: 'Ticket created successfully', ticketId });
+                })
+                .catch((emailError) => {
+                  console.error('Error sending email notification:', emailError);
+                  res.status(201).json({ message: 'Ticket created, but email failed', ticketId });
+                });
+            });
           }
         );
-      }
+      }      
     });
   });
 });
