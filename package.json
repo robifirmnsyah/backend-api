@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start backend/index.js --name backend-api --time",
+    // "start": "pm2 start backend/index.js --name backend-api --time",
+    "start": "node backend/index.js",
     "dev": "nodemon backend/index.js"
   },
   "author": "",
