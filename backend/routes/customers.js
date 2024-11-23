@@ -5,16 +5,22 @@ const router = express.Router();
 
 // Endpoint untuk menambahkan customer baru
 router.post('/', (req, res) => {
-  const { company_name, billing_id } = req.body;
+  const { company_name, billing_id, maintenance, limit_ticket } = req.body;
 
-  if (!company_name || !billing_id) {
-    return res.status(400).json({ error: 'Company name and billing ID are required' });
+  if (!company_name || !billing_id || !maintenance || limit_ticket === undefined) {
+    return res.status(400).json({ error: 'Company name, billing ID, maintenance, and limit_ticket are required' });
   }
 
   const company_id = `COMP-${crypto.randomInt(10000, 99999)}`; // Generate company_id unik
 
-  const query = 'INSERT INTO customers (company_id, company_name, billing_id) VALUES (?, ?, ?)';
-  db.query(query, [company_id, company_name, billing_id], (err, result) => {
+  const query = 'INSERT INTO customers (company_id, company_name, billing_id, maintenance, limit_ticket) VALUES (?, ?, ?, ?, ?)';
+  db.query(query, [
+    company_id,
+    company_name,
+    billing_id,
+    maintenance,
+    limit_ticket
+  ], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });

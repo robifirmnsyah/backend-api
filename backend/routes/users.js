@@ -215,7 +215,7 @@ router.get('/:id', (req, res) => {
 // Endpoint untuk mengupdate pengguna
 router.put('/:id', async (req, res) => {
   const id_user = req.params.id;
-  const { full_name, username, password, company_id, company_name, billing_id, role, email, phone } = req.body;
+  const { full_name, username, password, company_id, role, email, phone } = req.body;
 
   try {
     let hashedPassword = null;
@@ -229,16 +229,14 @@ router.put('/:id', async (req, res) => {
         username = ?, 
         ${password ? 'password = ?,' : ''} 
         company_id = ?, 
-        company_name = ?, 
-        billing_id = ?, 
         role = ?, 
         email = ?, 
         phone = ?
       WHERE id_user = ?
     `;
     const params = password
-      ? [full_name, username, hashedPassword, company_id, company_name, billing_id, role, email, phone, id_user]
-      : [full_name, username, company_id, company_name, billing_id, role, email, phone, id_user];
+      ? [full_name, username, hashedPassword, company_id, role, email, phone, id_user]
+      : [full_name, username, company_id, role, email, phone, id_user];
 
     db.query(query, params, (err, result) => {
       if (err) {
