@@ -256,18 +256,65 @@ router.put('/:id', async (req, res) => {
 // Endpoint untuk menghapus pengguna
 router.delete('/:id', (req, res) => {
   const id_user = req.params.id;
-  const query = 'DELETE FROM users WHERE id_user = ?';
 
-  db.query(query, [id_user], (err, result) => {
+  // Langkah 1: Cari tiket yang terkait dengan id_user
+  const getTicketsQuery = `
+    SELECT ticket_id 
+    FROM tickets 
+    WHERE company_id = (SELECT company_id FROM users WHERE id_user = ?)
+  `;
+
+  db.query(getTicketsQuery, [id_user], (err, tickets) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error('Database error (get tickets):', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ message: 'User deleted successfully' });
+
+    const ticketIds = tickets.map((ticket) => ticket.ticket_id);
+
+    // Langkah 2: Hapus komentar yang terkait dengan tiket dan id_user
+    const deleteCommentsQuery = `
+      DELETE FROM ticket_comments 
+      WHERE id_user = ? OR ticket_id IN (?)
+    `;
+
+    db.query(deleteCommentsQuery, [id_user, ticketIds], (err) => {
+      if (err) {
+        console.error('Database error (delete comments):', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      // Langkah 3: Hapus tiket yang terkait dengan company_id user
+      const deleteTicketsQuery = `
+        DELETE FROM tickets 
+        WHERE company_id = (SELECT company_id FROM users WHERE id_user = ?)
+      `;
+
+      db.query(deleteTicketsQuery, [id_user], (err) => {
+        if (err) {
+          console.error('Database error (delete tickets):', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Langkah 4: Hapus pengguna
+        const deleteUserQuery = 'DELETE FROM users WHERE id_user = ?';
+
+        db.query(deleteUserQuery, [id_user], (err, result) => {
+          if (err) {
+            console.error('Database error (delete user):', err);
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+          }
+
+          res.status(200).json({ message: 'User and related data deleted successfully' });
+        });
+      });
+    });
   });
 });
+
 
 module.exports = router;
