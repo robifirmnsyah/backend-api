@@ -292,7 +292,7 @@ router.get('/:ticket_id', (req, res) => {
 });
 
 // Endpoint untuk mengedit tiket berdasarkan ID
-router.put('/:ticket_id', (req, res) => {
+router.put('/:ticket_id', async (req, res) => {
   const ticketId = req.params.ticket_id;
   const { 
     company_id, 
@@ -302,10 +302,10 @@ router.put('/:ticket_id', (req, res) => {
     detail_issue, 
     priority, 
     contact, 
-    status // Tambahkan status di sini
+    status 
   } = req.body;
 
-  // Validasi input
+  // Validasi input wajib
   if (
     !company_id || 
     !company_name || 
@@ -314,45 +314,53 @@ router.put('/:ticket_id', (req, res) => {
     !detail_issue || 
     !priority || 
     !contact || 
-    !status // Tambahkan validasi untuk status
+    !status
   ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Query untuk mengupdate tiket
-  const query = `
-    UPDATE tickets SET 
-      company_id = ?, 
-      company_name = ?, 
-      product_list = ?, 
-      describe_issue = ?, 
-      detail_issue = ?, 
-      priority = ?, 
-      contact = ?, 
-      status = ? -- Tambahkan status di sini
-    WHERE ticket_id = ?
-  `;
+  // Validasi status (misalnya: Open, In Progress, Closed)
+  const validStatuses = ['Open', 'In Progress', 'Closed'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status value' });
+  }
 
-  db.query(query, [
-    company_id, 
-    company_name, 
-    product_list, 
-    describe_issue, 
-    detail_issue, 
-    priority, 
-    contact, 
-    status, // Tambahkan status ke parameter query
-    ticketId
-  ], (err, result) => {
-    if (err) {
-      console.error('Database error (update query):', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    // Query untuk mengupdate tiket
+    const query = `
+      UPDATE tickets SET 
+        company_id = ?, 
+        company_name = ?, 
+        product_list = ?, 
+        describe_issue = ?, 
+        detail_issue = ?, 
+        priority = ?, 
+        contact = ?, 
+        status = ? 
+      WHERE ticket_id = ?
+    `;
+
+    const [result] = await db.promise().query(query, [
+      company_id, 
+      company_name, 
+      product_list, 
+      describe_issue, 
+      detail_issue, 
+      priority, 
+      contact, 
+      status, 
+      ticketId
+    ]);
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
+
     res.status(200).json({ message: 'Ticket updated successfully' });
-  });
+  } catch (err) {
+    console.error('Database error (update query):', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 
