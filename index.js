@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerDocument = require('../swager.json'); // Path ke file JSON OpenAPI Anda
+const swaggerDocument = require('./swager.json'); // Path ke file JSON OpenAPI Anda
 
 
 // Import routes
