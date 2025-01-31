@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
     }
 
     // Jika tidak ada layanan ditemukan
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       return res.status(404).json({ 
         message: 'No services found' 
       });
@@ -24,7 +24,7 @@ router.get('/', (req, res) => {
 
     res.status(200).json({ 
       message: 'Services retrieved successfully', 
-      data: results 
+      data: results.rows 
     });
   });
 });

@@ -13,7 +13,7 @@ router.post('/', (req, res) => {
 
   const company_id = `COMP-${crypto.randomInt(10000, 99999)}`; // Generate company_id unik
 
-  const query = 'INSERT INTO customers (company_id, company_name, billing_id, maintenance, limit_ticket) VALUES (?, ?, ?, ?, ?)';
+  const query = 'INSERT INTO customers (company_id, company_name, billing_id, maintenance, limit_ticket) VALUES ($1, $2, $3, $4, $5)';
   db.query(query, [
     company_id,
     company_name,
@@ -37,7 +37,7 @@ router.get('/', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.status(200).json(results);
+    res.status(200).json(results.rows);
   });
 });
 
@@ -45,16 +45,16 @@ router.get('/', (req, res) => {
 router.get('/:company_id', (req, res) => {
   const { company_id } = req.params; // Ambil parameter dari URL
 
-  const query = 'SELECT * FROM customers WHERE company_id = ?';
+  const query = 'SELECT * FROM customers WHERE company_id = $1';
   db.query(query, [company_id], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       return res.status(404).json({ message: 'Customer not found' });
     }
-    res.status(200).json(results[0]); // Mengembalikan data pelanggan pertama
+    res.status(200).json(results.rows[0]); // Mengembalikan data pelanggan pertama
   });
 });
 
@@ -70,8 +70,8 @@ router.put('/:company_id', (req, res) => {
 
   const query = `
     UPDATE customers 
-    SET company_name = ?, billing_id = ?, maintenance = ?, limit_ticket = ? 
-    WHERE company_id = ?
+    SET company_name = $1, billing_id = $2, maintenance = $3, limit_ticket = $4 
+    WHERE company_id = $5
   `;
 
   db.query(query, [company_name, billing_id, maintenance, limit_ticket, company_id], (err, result) => {
@@ -79,7 +79,7 @@ router.put('/:company_id', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Customer not found' });
     }
     res.status(200).json({ message: 'Customer updated successfully' });
@@ -90,13 +90,13 @@ router.put('/:company_id', (req, res) => {
 router.delete('/:company_id', (req, res) => {
   const { company_id } = req.params;
 
-  const query = 'DELETE FROM customers WHERE company_id = ?';
+  const query = 'DELETE FROM customers WHERE company_id = $1';
   db.query(query, [company_id], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Customer not found' });
     }
     res.status(200).json({ message: 'Customer deleted successfully' });

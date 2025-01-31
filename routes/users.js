@@ -15,7 +15,7 @@ router.post('/login', (req, res) => {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  const query = 'SELECT * FROM users WHERE username = ?';
+  const query = 'SELECT * FROM users WHERE username = $1';
   db.query(query, [username], async (err, results) => {
     if (err) {
       console.error('Database error:', err);
@@ -23,11 +23,11 @@ router.post('/login', (req, res) => {
     }
 
     // Jika user tidak ditemukan
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    const user = results[0];
+    const user = results.rows[0];
 
     try {
       // Verifikasi password
@@ -86,18 +86,18 @@ router.post('/', async (req, res) => {
 
   try {
     // Periksa apakah company_id valid
-    const companyQuery = 'SELECT company_name, billing_id FROM customers WHERE company_id = ?';
+    const companyQuery = 'SELECT company_name, billing_id FROM customers WHERE company_id = $1';
     db.query(companyQuery, [company_id], async (err, results) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      if (results.length === 0) {
+      if (results.rows.length === 0) {
         return res.status(404).json({ error: 'Company not found' });
       }
 
-      const { company_name, billing_id } = results[0];
+      const { company_name, billing_id } = results.rows[0];
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -105,7 +105,7 @@ router.post('/', async (req, res) => {
       // Simpan pengguna ke database dengan email dan phone
       const userQuery = `
         INSERT INTO users (id_user, role, full_name, username, password, company_id, company_name, billing_id, email, phone) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `;
       db.query(
         userQuery,
@@ -133,7 +133,7 @@ router.get('/', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.status(200).json(results);
+    res.status(200).json(results.rows);
   });
 });
 
@@ -149,7 +149,7 @@ router.get('/:id_user', (req, res) => {
   const userQuery = `
     SELECT role, company_id 
     FROM users 
-    WHERE id_user = ?
+    WHERE id_user = $1
   `;
 
   db.query(userQuery, [id_user], (err, userResult) => {
@@ -158,11 +158,11 @@ router.get('/:id_user', (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (userResult.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const { role, company_id } = userResult[0];
+    const { role, company_id } = userResult.rows[0];
 
     // Query untuk mendapatkan data user sesuai role
     let query;
@@ -179,7 +179,7 @@ router.get('/:id_user', (req, res) => {
       query = `
         SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone 
         FROM users
-        WHERE company_id = ?
+        WHERE company_id = $1
       `;
       queryParams = [company_id];
     } else {
@@ -193,7 +193,7 @@ router.get('/:id_user', (req, res) => {
         console.error('Database error (users query):', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      res.status(200).json(results);
+      res.status(200).json(results.rows);
     });
   });
 });
@@ -201,16 +201,16 @@ router.get('/:id_user', (req, res) => {
 // Endpoint untuk mendapatkan pengguna berdasarkan ID
 router.get('/:id', (req, res) => {
   const id_user = req.params.id;
-  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone FROM users WHERE id_user = ?';
+  const query = 'SELECT id_user, role, full_name, username, company_id, company_name, billing_id, email, phone FROM users WHERE id_user = $1';
   db.query(query, [id_user], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json(result[0]);
+    res.status(200).json(result.rows[0]);
   });
 });
 
@@ -227,13 +227,13 @@ router.put('/:id', async (req, res) => {
 
     const query = `
       UPDATE users SET 
-        full_name = ?, 
-        username = ?, 
-        ${password ? 'password = ?,' : ''} 
-        company_id = ?, 
-        email = ?, 
-        phone = ?
-      WHERE id_user = ?
+        full_name = $1, 
+        username = $2, 
+        ${password ? 'password = $3,' : ''} 
+        company_id = $4, 
+        email = $5, 
+        phone = $6
+      WHERE id_user = $7
     `;
     const params = password
       ? [full_name, username, hashedPassword, company_id, email, phone, id_user]
@@ -244,7 +244,7 @@ router.put('/:id', async (req, res) => {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ message: 'User not found' });
       }
       res.status(200).json({ message: 'User updated successfully' });
@@ -263,7 +263,7 @@ router.delete('/:id', (req, res) => {
   // Hapus komentar terkait user
   const deleteCommentsQuery = `
     DELETE FROM ticket_comments 
-    WHERE id_user = ?
+    WHERE id_user = $1
   `;
 
   db.query(deleteCommentsQuery, [id_user], (err) => {
@@ -273,7 +273,7 @@ router.delete('/:id', (req, res) => {
     }
 
     // Hapus user setelah komentar terkait dihapus
-    const deleteUserQuery = 'DELETE FROM users WHERE id_user = ?';
+    const deleteUserQuery = 'DELETE FROM users WHERE id_user = $1';
 
     db.query(deleteUserQuery, [id_user], (err, result) => {
       if (err) {
@@ -281,7 +281,7 @@ router.delete('/:id', (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ message: 'User not found' });
       }
 

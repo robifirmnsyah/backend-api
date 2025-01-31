@@ -57,7 +57,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
   const companyQuery = `
     SELECT company_name, limit_ticket 
     FROM customers 
-    WHERE company_id = ?
+    WHERE company_id = $1
   `;
   
   db.query(companyQuery, [company_id], (err, companyResult) => {
@@ -66,17 +66,17 @@ router.post('/', upload.single('attachment'), (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (companyResult.length === 0) {
+    if (companyResult.rows.length === 0) {
       return res.status(404).json({ error: 'Company not found' });
     }
 
-    const { company_name, limit_ticket } = companyResult[0];
+    const { company_name, limit_ticket } = companyResult.rows[0];
 
     // Query untuk menghitung jumlah tiket aktif dari perusahaan ini
     const ticketCountQuery = `
       SELECT COUNT(*) AS ticket_count 
       FROM tickets 
-      WHERE company_id = ?
+      WHERE company_id = $1
     `;
     
     db.query(ticketCountQuery, [company_id], (err, ticketResult) => {
@@ -85,7 +85,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      const ticketCount = ticketResult[0].ticket_count;
+      const ticketCount = ticketResult.rows[0].ticket_count;
 
       // Validasi: Cek apakah jumlah tiket melebihi limit
       if (ticketCount >= limit_ticket) {
@@ -126,7 +126,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
             ticket_id, product_list, describe_issue, detail_issue, priority, 
             contact, company_id, company_name, attachment, id_user, status
           ) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `;
       
         db.query(
@@ -154,7 +154,7 @@ router.post('/', upload.single('attachment'), (req, res) => {
             const updateUsageQuery = `
               UPDATE customers 
               SET ticket_usage = ticket_usage + 1 
-              WHERE company_id = ?
+              WHERE company_id = $1
             `;
             
             db.query(updateUsageQuery, [company_id], (err, updateResult) => {
@@ -200,7 +200,7 @@ router.get('/', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
-    res.status(200).json(results);
+    res.status(200).json(results.rows);
   });
 });
 
@@ -209,7 +209,7 @@ router.get('/user/:id_user', (req, res) => {
   const { id_user } = req.params;
 
   // Query untuk mendapatkan data pengguna berdasarkan id_user
-  const userQuery = 'SELECT role, company_id FROM users WHERE id_user = ?';
+  const userQuery = 'SELECT role, company_id FROM users WHERE id_user = $1';
 
   db.query(userQuery, [id_user], (err, userResult) => {
     if (err) {
@@ -217,11 +217,11 @@ router.get('/user/:id_user', (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (userResult.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const user = userResult[0]; // Ambil data user (role dan company_id)
+    const user = userResult.rows[0]; // Ambil data user (role dan company_id)
     const { role, company_id } = user;
 
     // Logika berdasarkan role pengguna
@@ -233,7 +233,7 @@ router.get('/user/:id_user', (req, res) => {
       ticketQuery = 'SELECT * FROM tickets';
     } else if (role === 'Customer Admin' || role === 'Customer') {
       // Admin Customer dan Customer hanya melihat tiket berdasarkan company_id mereka
-      ticketQuery = 'SELECT * FROM tickets WHERE company_id = ?';
+      ticketQuery = 'SELECT * FROM tickets WHERE company_id = $1';
       queryParams = [company_id];
     } else {
       // Role tidak dikenali
@@ -247,7 +247,7 @@ router.get('/user/:id_user', (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      res.status(200).json(tickets);
+      res.status(200).json(tickets.rows);
     });
   });
 });
@@ -255,15 +255,15 @@ router.get('/user/:id_user', (req, res) => {
 // Endpoint untuk mendapatkan tiket berdasarkan ID
 router.get('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
-  const query = 'SELECT * FROM tickets WHERE ticket_id = ?';
+  const query = 'SELECT * FROM tickets WHERE ticket_id = $1';
   db.query(query, [ticketId], (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
-    res.status(200).json(result[0]);
+    res.status(200).json(result.rows[0]);
   });
 });
 
@@ -305,18 +305,18 @@ router.put('/:ticket_id', async (req, res) => {
     // Query untuk mengupdate tiket
     const query = `
       UPDATE tickets SET 
-        company_id = ?, 
-        company_name = ?, 
-        product_list = ?, 
-        describe_issue = ?, 
-        detail_issue = ?, 
-        priority = ?, 
-        contact = ?, 
-        status = ? 
-      WHERE ticket_id = ?
+        company_id = $1, 
+        company_name = $2, 
+        product_list = $3, 
+        describe_issue = $4, 
+        detail_issue = $5, 
+        priority = $6, 
+        contact = $7, 
+        status = $8 
+      WHERE ticket_id = $9
     `;
 
-    const [result] = await db.promise().query(query, [
+    const result = await db.query(query, [
       company_id, 
       company_name, 
       product_list, 
@@ -328,7 +328,7 @@ router.put('/:ticket_id', async (req, res) => {
       ticketId
     ]);
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
@@ -345,7 +345,7 @@ router.delete('/:ticket_id', (req, res) => {
   const ticketId = req.params.ticket_id;
 
   // Query untuk menghapus komentar terkait dari tabel ticket_comments
-  const deleteCommentsQuery = 'DELETE FROM ticket_comments WHERE ticket_id = ?';
+  const deleteCommentsQuery = 'DELETE FROM ticket_comments WHERE ticket_id = $1';
 
   db.query(deleteCommentsQuery, [ticketId], (err, result) => {
     if (err) {
@@ -354,7 +354,7 @@ router.delete('/:ticket_id', (req, res) => {
     }
 
     // Setelah komentar dihapus, hapus tiket dari tabel tickets
-    const deleteTicketQuery = 'DELETE FROM tickets WHERE ticket_id = ?';
+    const deleteTicketQuery = 'DELETE FROM tickets WHERE ticket_id = $1';
     
     db.query(deleteTicketQuery, [ticketId], (err, result) => {
       if (err) {
@@ -362,7 +362,7 @@ router.delete('/:ticket_id', (req, res) => {
         return res.status(500).json({ error: 'Database error while deleting ticket' });
       }
 
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ message: 'Ticket not found' });
       }
 
@@ -384,7 +384,7 @@ router.post('/comment/:ticket_id', (req, res) => {
 
   const query = `
     INSERT INTO ticket_comments (ticket_id, id_user, comment)
-    VALUES (?, ?, ?)
+    VALUES ($1, $2, $3)
   `;
 
   db.query(query, [ticketId, id_user, comment], (err, result) => {
@@ -403,7 +403,7 @@ router.get('/comment/:ticket_id', (req, res) => {
     SELECT tc.ticket_id, tc.comment, u.full_name, tc.timestamp
     FROM ticket_comments tc
     JOIN users u ON tc.id_user = u.id_user
-    WHERE tc.ticket_id = ?
+    WHERE tc.ticket_id = $1
   `;
 
   db.query(query, [ticketId], (err, results) => {
@@ -412,11 +412,11 @@ router.get('/comment/:ticket_id', (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       return res.status(404).json({ message: 'No comments found' });
     }
 
-    res.status(200).json(results);
+    res.status(200).json(results.rows);
   });
 });
 

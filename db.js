@@ -1,17 +1,16 @@
-const mysql = require('mysql2');
-const db = mysql.createConnection({
-  // host: '10.7.90.63',
-  // user: 'magna',
-  // password: 'M@gn@123',
-  // database: 'support_ticket_db',
-  host: 'u0cc3.h.filess.io',
-  user: 'MagnasightDB_campcoldso',
-  password: '1a86cb347ade4fa49811969dd29bace3f61f54e0',
-  port: '3307',
-  database: 'MagnasightDB_campcoldso',
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  host: 'localhost',
+  user: 'magna',
+  password: 'M@gn@123',
+  port: 5432, // PostgreSQL default port
+  database: 'support_ticket_db',
 });
-db.connect(err => {
-  if (err) throw err;
-  console.log('Connected to MySQL');
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
 });
-module.exports = db;
+
+module.exports = pool;
