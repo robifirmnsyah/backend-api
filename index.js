@@ -25,7 +25,7 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: { title: 'Express API', version: '1.0.0' },
-    servers: [{ url: 'http://localhost:3000' }],
+    servers: [{ url: 'http://localhost:8000' }],
   },
   apis: ['./routes/*.js'],
 };
@@ -38,4 +38,4 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/services', serviceRoutes);
 
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+app.listen(8000, () => console.log('Server running on http://localhost:8000'));

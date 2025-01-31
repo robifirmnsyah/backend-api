@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon backend/index.js"
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop support-ticket-api",
+    "restart": "pm2 restart support-ticket-api",
+    "dev": "nodemon backend/index.js",
+    "logs": "pm2 logs support-ticket-api"
   },
   "author": "",
   "license": "ISC",
