@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
+      "url": "http://localhost:8000",
       "description": "Development server"
     }
   ],
@@ -46,6 +46,12 @@
                       },
                       "billing_id": {
                         "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
                       }
                     }
                   }
@@ -76,19 +82,28 @@
                   },
                   "company_id": {
                     "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
                   }
                 },
-                "required": ["full_name", "username", "password", "company_id"]
+                "required": ["full_name", "username", "password", "company_id", "email", "phone"]
               }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
           },
-          "responses": {
-            "201": {
-              "description": "User created successfully"
-            },
-            "400": {
-              "description": "Missing required fields"
-            }
+          "400": {
+            "description": "Missing required fields"
           }
         }
       }
@@ -136,6 +151,12 @@
                     },
                     "billing_id": {
                       "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
                     }
                   }
                 }
@@ -180,13 +201,10 @@
                   "company_id": {
                     "type": "string"
                   },
-                  "company_name": {
+                  "email": {
                     "type": "string"
                   },
-                  "billing_id": {
-                    "type": "string"
-                  },
-                  "role": {
+                  "phone": {
                     "type": "string"
                   }
                 }
@@ -249,6 +267,12 @@
                       },
                       "billing_id": {
                         "type": "string"
+                      },
+                      "maintenance": {
+                        "type": "string"
+                      },
+                      "limit_ticket": {
+                        "type": "integer"
                       }
                     }
                   }
@@ -273,34 +297,40 @@
                   },
                   "billing_id": {
                     "type": "string"
+                  },
+                  "maintenance": {
+                    "type": "string"
+                  },
+                  "limit_ticket": {
+                    "type": "integer"
                   }
                 },
-                "required": ["company_name", "billing_id"]
+                "required": ["company_name", "billing_id", "maintenance", "limit_ticket"]
               }
             }
-          },
-          "responses": {
-            "201": {
-              "description": "Customer created successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "message": {
-                        "type": "string"
-                      },
-                      "company_id": {
-                        "type": "string"
-                      }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
                     }
                   }
                 }
               }
-            },
-            "400": {
-              "description": "Company name and billing ID are required"
             }
+          },
+          "400": {
+            "description": "Company name, billing ID, maintenance, and limit_ticket are required"
           }
         }
       }
@@ -336,6 +366,12 @@
                     },
                     "billing_id": {
                       "type": "string"
+                    },
+                    "maintenance": {
+                      "type": "string"
+                    },
+                    "limit_ticket": {
+                      "type": "integer"
                     }
                   }
                 }
@@ -373,9 +409,15 @@
                   },
                   "billing_id": {
                     "type": "string"
+                  },
+                  "maintenance": {
+                    "type": "string"
+                  },
+                  "limit_ticket": {
+                    "type": "integer"
                   }
                 },
-                "required": ["company_name", "billing_id"]
+                "required": ["company_name", "billing_id", "maintenance", "limit_ticket"]
               }
             }
           }
@@ -388,7 +430,7 @@
             "description": "Customer not found"
           },
           "400": {
-            "description": "Company name and billing ID are required"
+            "description": "Company name, billing ID, maintenance, and limit_ticket are required"
           }
         }
       },
@@ -431,17 +473,37 @@
                     "type": "object",
                     "properties": {
                       "ticket_id": {
-                        "type": "string",
-                        "example": "TICKET-1732075969127-TAE0YH"
+                        "type": "string"
                       },
-                      "product_list": { "type": "string" },
-                      "describe_issue": { "type": "string" },
-                      "detail_issue": { "type": "string" },
-                      "priority": { "type": "string" },
-                      "contact": { "type": "string" },
-                      "attachment": { 
-                        "type": "string",
-                        "nullable": true
+                      "product_list": {
+                        "type": "string"
+                      },
+                      "describe_issue": {
+                        "type": "string"
+                      },
+                      "detail_issue": {
+                        "type": "string"
+                      },
+                      "priority": {
+                        "type": "string"
+                      },
+                      "contact": {
+                        "type": "string"
+                      },
+                      "company_id": {
+                        "type": "string"
+                      },
+                      "company_name": {
+                        "type": "string"
+                      },
+                      "attachment": {
+                        "type": "string"
+                      },
+                      "id_user": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
                       }
                     }
                   }
@@ -461,13 +523,29 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "product_list": { "type": "string" },
-                  "describe_issue": { "type": "string" },
-                  "detail_issue": { "type": "string" },
-                  "priority": { "type": "string" },
-                  "contact": { "type": "string" }
+                  "company_id": {
+                    "type": "string"
+                  },
+                  "product_list": {
+                    "type": "string"
+                  },
+                  "describe_issue": {
+                    "type": "string"
+                  },
+                  "detail_issue": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "string"
+                  },
+                  "contact": {
+                    "type": "string"
+                  },
+                  "id_user": {
+                    "type": "string"
+                  }
                 },
-                "required": ["product_list", "describe_issue", "detail_issue", "priority", "contact"]
+                "required": ["company_id", "product_list", "describe_issue", "detail_issue", "priority", "contact", "id_user"]
               }
             }
           }
@@ -487,8 +565,8 @@
     },
     "/api/tickets/{ticket_id}": {
       "get": {
+        "tags": ["Tickets"],
         "summary": "Get a ticket by ID",
-        "description": "Retrieve a ticket by its unique ticket ID",
         "parameters": [
           {
             "name": "ticket_id",
@@ -509,17 +587,37 @@
                   "type": "object",
                   "properties": {
                     "ticket_id": {
-                      "type": "string",
-                      "example": "TICKET-1732075969127-TAE0YH"
+                      "type": "string"
                     },
-                    "product_list": { "type": "string" },
-                    "describe_issue": { "type": "string" },
-                    "detail_issue": { "type": "string" },
-                    "priority": { "type": "string" },
-                    "contact": { "type": "string" },
-                    "attachment": { 
-                      "type": "string",
-                      "nullable": true 
+                    "product_list": {
+                      "type": "string"
+                    },
+                    "describe_issue": {
+                      "type": "string"
+                    },
+                    "detail_issue": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "string"
+                    },
+                    "contact": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    },
+                    "company_name": {
+                      "type": "string"
+                    },
+                    "attachment": {
+                      "type": "string"
+                    },
+                    "id_user": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
                     }
                   }
                 }
@@ -533,9 +631,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { 
-                      "type": "string",
-                      "example": "Ticket not found"
+                    "error": {
+                      "type": "string"
                     }
                   }
                 }
@@ -565,12 +662,32 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "product_list": { "type": "string" },
-                  "describe_issue": { "type": "string" },
-                  "detail_issue": { "type": "string" },
-                  "priority": { "type": "string" },
-                  "contact": { "type": "string" }
-                }
+                  "company_id": {
+                    "type": "string"
+                  },
+                  "company_name": {
+                    "type": "string"
+                  },
+                  "product_list": {
+                    "type": "string"
+                  },
+                  "describe_issue": {
+                    "type": "string"
+                  },
+                  "detail_issue": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "string"
+                  },
+                  "contact": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                },
+                "required": ["company_id", "company_name", "product_list", "describe_issue", "detail_issue", "priority", "contact", "status"]
               }
             }
           }
@@ -607,6 +724,446 @@
           },
           "404": {
             "description": "Ticket not found"
+          }
+        }
+      }
+    },
+    "/api/tickets/comment/{ticket_id}": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Add a comment to a ticket",
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the ticket to add a comment to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_user": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                },
+                "required": ["id_user", "comment"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment added successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "Get comments for a ticket",
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the ticket to get comments for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id_user": {
+                        "type": "string"
+                      },
+                      "comment": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": ["Projects"],
+        "summary": "Get all projects",
+        "responses": {
+          "200": {
+            "description": "A list of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "project_id": {
+                        "type": "string"
+                      },
+                      "project_name": {
+                        "type": "string"
+                      },
+                      "billing_id": {
+                        "type": "string"
+                      },
+                      "company_id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Projects"],
+        "summary": "Create a new project",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project_id": {
+                    "type": "string"
+                  },
+                  "project_name": {
+                    "type": "string"
+                  },
+                  "company_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["project_id", "project_name", "company_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}": {
+      "get": {
+        "tags": ["Projects"],
+        "summary": "Get a project by ID",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A project object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "project_id": {
+                      "type": "string"
+                    },
+                    "project_name": {
+                      "type": "string"
+                    },
+                    "billing_id": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Projects"],
+        "summary": "Update a project",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project_name": {
+                    "type": "string"
+                  },
+                  "company_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["project_name", "company_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated successfully"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Projects"],
+        "summary": "Delete a project",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the project to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted successfully"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      }
+    },
+    "/api/groups": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "Get all groups",
+        "responses": {
+          "200": {
+            "description": "A list of groups",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "group_id": {
+                        "type": "string"
+                      },
+                      "group_name": {
+                        "type": "string"
+                      },
+                      "company_id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Groups"],
+        "summary": "Create a new group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "group_name": {
+                    "type": "string"
+                  },
+                  "company_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["group_name", "company_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Group created successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          }
+        }
+      }
+    },
+    "/api/groups/{group_id}": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "Get a group by ID",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the group",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A group object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "group_id": {
+                      "type": "string"
+                    },
+                    "group_name": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Groups"],
+        "summary": "Update a group",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the group",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "group_name": {
+                    "type": "string"
+                  },
+                  "company_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["group_name", "company_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group updated successfully"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Groups"],
+        "summary": "Delete a group",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the group to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group deleted successfully"
+          },
+          "404": {
+            "description": "Group not found"
           }
         }
       }
